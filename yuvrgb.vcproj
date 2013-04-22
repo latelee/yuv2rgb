@@ -119,9 +119,6 @@
 				RelativePath=".\main.cpp">
 			</File>
 			<File
-				RelativePath=".\rgb2yuv.c">
-			</File>
-			<File
 				RelativePath=".\yuv2rgb.c">
 			</File>
 		</Filter>
@@ -131,9 +128,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}">
 			<File
 				RelativePath=".\bmp_utils.h">
-			</File>
-			<File
-				RelativePath=".\rgb2yuv.h">
 			</File>
 			<File
 				RelativePath=".\yuv2rgb.h">
