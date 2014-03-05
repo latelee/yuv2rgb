@@ -48,7 +48,8 @@ int save_bmp422(const char* yuvfile, const char* bmpfile, int width, int height)
 
     ret = (int)fread(framePtr, 1, picSize, fp1);
 
-    yuv422p_to_rgb24(framePtr, rgbPtr, width, height);
+    //yuv422p_to_rgb24(framePtr, rgbPtr, width, height);
+	yuv_to_rgb24(YUV422P, framePtr, rgbPtr, width, height);
 
     // rgb --> bgr
     swap_rgb(rgbPtr, rgbSize);
@@ -109,7 +110,8 @@ int save_bmp422sp(const char* yuvfile, const char* bmpfile, int width, int heigh
 
     ret = (int)fread(framePtr, 1, picSize, fp1);
 
-    yuv422sp_to_rgb24(framePtr, rgbPtr, width, height);
+    //yuv422sp_to_rgb24(framePtr, rgbPtr, width, height);
+	yuv_to_rgb24(YUV422SP, framePtr, rgbPtr, width, height);
 
     // rgb --> bgr
     swap_rgb(rgbPtr, rgbSize);
@@ -169,7 +171,9 @@ int save_bmp420(const char* yuvfile, const char* bmpfile, int width, int height)
 
     ret = (int)fread(framePtr, 1, picSize, fp1);
 
-    yuv420p_to_rgb24(framePtr, rgbPtr, width, height);
+    //yuv420p_to_rgb24(framePtr, rgbPtr, width, height);
+	//yuv_to_rgb24(YUV420P, framePtr, rgbPtr, width, height);
+	yuv420_to_rgb24_2(framePtr, rgbPtr, width, height);
 
     // rgb --> bgr
     swap_rgb(rgbPtr, rgbSize);
@@ -310,10 +314,13 @@ int main(int argc, char* argv[])
     //save_bmp422("yuvfile/tulips_yuv422_prog_planar_qcif.yuv", "tulips_yuv422_qcif_0.bmp", 176, 144);
 
 	// OK
-	save_bmp422sp("yuvfile/yuv422sp_3000x1024.yuv", "test.bmp", 3000, 1024);
+	//save_bmp422sp("yuvfile/yuv422sp_3000x1024.yuv", "test.bmp", 3000, 1024);
     
 	// SPתP
     //ConvertImage("yuvfile/yuv422sp_3000x1024.yuv", "yuvfile/yuv422p.yuv", 3000, 1024);
     
+	save_bmp420("yuvfile/suzie_qcif_yuv420p_00.yuv", "suzie_qcif_1.bmp", 176, 144);
+
+
 	return 0;
 }

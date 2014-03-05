@@ -14,7 +14,8 @@
               cif: 352*288
  * @todo  确定好RGB排序到底是什么
  *
- * @log   2013-10-26 参考422p函数，实现422sp转换422sp格式函数。将初始化接口隐藏，不对外公开
+ * @log   2013-10-26 参考422p函数，实现422sp转换422p格式函数。将初始化接口隐藏，不对外公开
+ *        2014-02-10 封装统一一个函数。
  *
  * 笔记：
             每个Y、U、V、R、G、B均占用1个字节
@@ -98,15 +99,50 @@ void yuv420p_to_rgb24(unsigned char* yuvbuffer,unsigned char* rgbbuffer, int wid
  *
  *
  * @note
- *        1、YUV422SP格式YUV缓冲区大小为w * h * 3
+ *        1、YUV422SP格式YUV缓冲区大小为w * h * 2
  *        2、rgbbuffer数据排序为RGB，如保存BMP，需要调整为BGR
  */
 void yuv422sp_to_rgb24(unsigned char* yuvbuffer,unsigned char* rgbbuffer, int width, int height);
 
+// TODO：定义个好一点的值
+typedef enum
+{
+    YUV420P = 0xffff0001,
+    YUV422P = 0xffff0002,
+	YUV422SP = 0xfff0003,
+}YUV_TYPE;
+
+/** 
+ * @brief YUV转RGB24(查表法)
+ * 
+ * @param type       YUV格式类型
+ * @param yuvbuffer  YUV格式缓冲区
+ * @param rgbbuffer  RGB24格式缓冲区
+ * @param width      图像宽
+ * @param height     图像高
+ *
+ * @return 0: OK -1: failed
+ *
+ * @note
+ *        1、YUV422 buffer: w * h * 2 YUV420 buffer: w * h * 3 / 2
+ *        2、rgbbuffer数据排序为RGB，如保存BMP，需要调整为BGR
+ */
+int yuv_to_rgb24(YUV_TYPE type, unsigned char* yuvbuffer,unsigned char* rgbbuffer, int width, int height);
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // todo
 void yuv422sp_to_yuv422p(unsigned char* yuv422sp, unsigned char* yuv422p, int width, int height);
 
 void yuv420sp_to_yuv420p(unsigned char* yuv420sp, unsigned char* yuv420p, int width, int height);
+
+
+/////////////////////////////////////////////////
+
+void yuv420_to_rgb24_1(unsigned char* yuv420, unsigned char* rgb, int width, int height);
+
+void yuv420_to_rgb24_2(unsigned char *yuv420, unsigned char *rgb24, int width, int height) ;
+
+void yuv420_to_rgb24_3(unsigned char* yuv, unsigned char* rgb, int width, int height);
 
 #ifdef __cplusplus
 }
