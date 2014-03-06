@@ -55,18 +55,18 @@ void yuv422p_to_rgb24(unsigned char* yuv422p, unsigned char* rgb, int width, int
     unsigned char* p_u;
     unsigned char* p_v;
     unsigned char* p_rgb;
-	static int init_yuv422p = 0;	// just do it once
+    static int init_yuv422p = 0;    // just do it once
 
     p_y = yuv422p;
     p_u = p_y + width * height;
     p_v = p_u + width * height / 2;
     p_rgb = rgb;
 
-	if (init_yuv422p == 0)
-	{
-		init_yuv422p_table();
-		init_yuv422p = 1;
-	}
+    if (init_yuv422p == 0)
+    {
+        init_yuv422p_table();
+        init_yuv422p = 1;
+    }
 
     for (i = 0; i < width * height / 2; i++)
     {
@@ -216,7 +216,7 @@ void yuv420p_to_rgb24(unsigned char* yuvbuffer,unsigned char* rgbbuffer, int wid
     int i, j, c1, c2, c3, c4;   
     unsigned char *d1, *d2;   
     unsigned char *src_u, *src_v;
-	static int init_yuv420p = 0;
+    static int init_yuv420p = 0;
     
     src_u = yuvbuffer + width * height;   // u
     src_v = src_u + width * height / 4;  // v
@@ -226,11 +226,11 @@ void yuv420p_to_rgb24(unsigned char* yuvbuffer,unsigned char* rgbbuffer, int wid
     d1 = rgbbuffer;   
     d2 = d1 + 3 * width;   
 
-	if (init_yuv420p == 0)
-	{
-		init_yuv420p_table();
-		init_yuv420p = 1;
-	}
+    if (init_yuv420p == 0)
+    {
+        init_yuv420p_table();
+        init_yuv420p = 1;
+    }
 
     for (j = 0; j < height; j += 2)    
     {    
@@ -299,23 +299,23 @@ void yuv422sp_to_rgb24(unsigned char* yuv422sp, unsigned char* rgb, int width, i
     unsigned char* p_y;
     unsigned char* p_uv;
     unsigned char* p_rgb;
-	static int init_yuv422sp = 0;	// just do it once
+    static int init_yuv422sp = 0;    // just do it once
 
     p_y = yuv422sp;
-    p_uv = p_y + width * height;	// uv分量在Y后面
+    p_uv = p_y + width * height;    // uv分量在Y后面
     p_rgb = rgb;
 
-	if (init_yuv422sp == 0)
-	{
-		init_yuv422p_table();
-		init_yuv422sp = 1;
-	}
+    if (init_yuv422sp == 0)
+    {
+        init_yuv422p_table();
+        init_yuv422sp = 1;
+    }
 
     for (i = 0; i < width * height / 2; i++)
     {
         y  = p_y[0];
         cb = p_uv[0];
-        cr = p_uv[1];	// v紧跟u，在u的下一个位置
+        cr = p_uv[1];    // v紧跟u，在u的下一个位置
 
         r = MAX (0, MIN (255, (V[cr] + Y1[y])/10000));   //R value
         b = MAX (0, MIN (255, (U[cb] + Y1[y])/10000));   //B value
@@ -342,6 +342,30 @@ void yuv422sp_to_rgb24(unsigned char* yuv422sp, unsigned char* rgb, int width, i
         p_uv += 2;
         p_rgb += 6;
     }
+}
+
+int yuv_to_rgb24(YUV_TYPE type, unsigned char* yuvbuffer,unsigned char* rgbbuffer, int width, int height)
+{
+    int ret = 0;
+
+    switch (type)
+    {
+    case YUV420P:
+        yuv420p_to_rgb24(yuvbuffer, rgbbuffer, width, height);
+        break;
+    case YUV422P:
+        yuv422p_to_rgb24(yuvbuffer, rgbbuffer, width, height);
+        break;
+    case YUV422SP:
+        yuv422sp_to_rgb24(yuvbuffer, rgbbuffer, width, height);
+        break;
+    default:
+        printf("unsupport yuv type!\n");
+        ret = -1;
+        break;
+    }
+
+    return ret;
 }
 
 //===================================================================
@@ -412,5 +436,413 @@ void yuv420sp_to_yuv420p(unsigned char* yuv420sp, unsigned char* yuv420p, int wi
     {
         u_tmp[i] = uv[j];
         v_tmp[i] = uv[j+1];
+    }
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
+// 自己研究的
+
+int rgb2yuv(int r, int g, int b, int* Y, int* Cb, int* Cr)
+{
+    int y, cb, cr;
+
+    y = (int)( 0.299    * r + 0.587   * g + 0.114   * b);
+    cb = (int)(-0.16874 * r - 0.33126 * g + 0.50000 * b + 128);
+    if (cb < 0)
+        cb = 0;
+    cr = (int)( 0.50000 * r - 0.41869 * g - 0.08131 * b + 128);
+    if (cr < 0)
+        cr = 0;
+
+    *Y = y;
+    *Cb = cb;
+    *Cr = cr;
+
+    return 0;
+}
+
+// TODO：改为整数运算
+int yuv2rgb(int Y, int Cb, int Cr, int* r, int* g, int* b)
+{
+    unsigned int r_tmp, g_tmp, b_tmp;
+    unsigned char r_t, g_t, b_t;
+
+    // OK
+    // 图片表面有“白纱”
+#if 0
+    // YUV(0~255) JFIF
+    //r_t = (unsigned char)(Y + 1.402 * (Cr - 128));
+    //g_t = (unsigned char)(Y - 0.34414 * (Cb - 128) - 0.71414 * (Cr - 128));
+    //b_t = (unsigned char)(Y + 1.772 * (Cb - 128));
+
+    r_tmp = (Y + 1.402 * (Cr - 128));
+    g_tmp = (Y - 0.34414 * (Cb - 128) - 0.71414 * (Cr - 128));
+    b_tmp = (Y + 1.772 * (Cb - 128));
+
+    r_t =  MAX (0, MIN (255, r_tmp));
+    g_t =  MAX (0, MIN (255, g_tmp));
+    b_t =  MAX (0, MIN (255, b_tmp));
+
+#endif
+
+    // YCbCr(16~235)
+    // 有个别颜色出错。但无“白纱”
+#if 01
+    //r_t = (unsigned char)(1.164 * (Y - 16) + 1.596 * (Cr - 128));
+    //g_t = (unsigned char)(1.164 * (Y - 16) - 0.813 * (Cr - 128) - 0.391 * (Cb - 128));
+    //b_t = (unsigned char)(1.164 * (Y - 16) + 2.018 * (Cb - 128));
+
+    r_tmp = (unsigned char)(1.164 * (Y - 16) + 1.596 * (Cr - 128));
+    g_tmp = (unsigned char)(1.164 * (Y - 16) - 0.813 * (Cr - 128) - 0.391 * (Cb - 128));
+    b_tmp = (unsigned char)(1.164 * (Y - 16) + 2.018 * (Cb - 128));
+
+    r_t =  MAX (0, MIN (255, r_tmp));
+    g_t =  MAX (0, MIN (255, g_tmp));
+    b_t =  MAX (0, MIN (255, b_tmp));
+#endif
+    // not OK
+#if 0
+    r_t = (unsigned char)(Y + 1.403*Cr);
+    g_t = (unsigned char)(Y - 0.344*Cb - 0.714*Cr);
+    b_t = (unsigned char)(Y + 1.770*Cb);
+#endif
+
+    *r = r_t;
+    *g = g_t;
+    *b = b_t;
+
+    return 0;
+}
+
+#if 01
+#define RANGE_INT(iVal, iMin, iMax)                     ( ( ( iVal ) > ( iMin ) ) ? ( ( ( iVal ) <= ( iMax ) ) ? ( iVal ) : ( iMax ) ) : ( iMin ) )  
+#define ROUND_SHR_POSITIVE(Dividend, iShiftRightCount)  ( ( ( Dividend ) & ( 1 << ( ( iShiftRightCount ) - 1 ) ) ) ? ( ( Dividend ) >> ( iShiftRightCount ) ) + 1 : ( ( Dividend ) >> ( iShiftRightCount ) ) )  
+#define ROUND_SHR_NEGATIVE(Dividend, iShiftRightCount)  ( -( ( ( -( Dividend ) ) & ( 1 << ( ( iShiftRightCount ) - 1 ) ) ) ? ( ( -( Dividend ) ) >> ( iShiftRightCount ) ) + 1 : ( ( -( Dividend ) ) >> ( iShiftRightCount ) ) ) )  
+#define ROUND_SHR(Dividend, iShiftRightCount)           ( ( ( Dividend ) >= 0 ) ? ROUND_SHR_POSITIVE( Dividend, iShiftRightCount ) : ROUND_SHR_NEGATIVE( Dividend, iShiftRightCount ) )  
+
+void YCbCrConvertToRGB(int Y, int Cb, int Cr, int* R, int* G, int* B)  
+{  
+    int iTmpR = 0;  
+    int iTmpG = 0;  
+    int iTmpB = 0;  
+
+    iTmpR = (((int)Y) << 14) + 22970*(((int)Cr) - 128);  
+    iTmpG = (((int)Y) << 14) -  5638*(((int)Cb) - 128) - 11700*(((int)Cr) - 128);  
+    iTmpB = (((int)Y) << 14) + 29032*(((int)Cb) - 128);  
+
+    iTmpR = ROUND_SHR(iTmpR, 14);  
+    iTmpG = ROUND_SHR(iTmpG, 14);  
+    iTmpB = ROUND_SHR(iTmpB, 14);  
+
+    *R = (int)RANGE_INT(iTmpR, 0, 255);  
+    *G = (int)RANGE_INT(iTmpG, 0, 255);  
+    *B = (int)RANGE_INT(iTmpB, 0, 255);  
+    //printf("--%d %d %d %d %d %d--\n", iTmpR, iTmpG, iTmpB, *R, *G, *B);
+} 
+#endif
+
+/*
+y - y
+u - cb
+v - cr
+可在此函数中调整RGB的排序
+TODO：这种方法转换得到的图片比查表法得到的效果差一些
+*/
+void yuv422_to_rgb24_1(unsigned char* yuv422, unsigned char* rgb, int width, int height)
+{
+    int y, cb, cr;
+    int r, g, b;
+    int i = 0;
+    unsigned char* p_y;
+    unsigned char* p_u;
+    unsigned char* p_v;
+    unsigned char* p_rgb;
+    
+    p_y = yuv422;
+    p_u = p_y + width * height;
+    p_v = p_u + width * height / 2;
+    p_rgb = rgb;
+
+    for (i = 0; i < width * height / 2; i++)
+    {
+        y  = p_y[0];
+        cb = p_u[0];
+        cr = p_v[0];
+        //yuv2rgb(y, cb, cr, &r, &g, &b);
+        YCbCrConvertToRGB(y, cb, cr, &r, &g, &b);
+        // 此处可调整RGB排序，BMP图片排序为BGR
+        p_rgb[0] = r;
+        p_rgb[1] = g;
+        p_rgb[2] = b;
+
+        y  = p_y[1];
+        cb = p_u[0];
+        cr = p_v[0];
+        //yuv2rgb(y, cb, cr, &r, &g, &b);
+        YCbCrConvertToRGB(y, cb, cr, &r, &g, &b);
+        p_rgb[3] = r;
+        p_rgb[4] = g;
+        p_rgb[5] = b;
+
+        p_y += 2;
+        p_u += 1;
+        p_v += 1;
+        p_rgb += 6;
+    }
+}
+
+/*
+y - y
+u - cb
+v - cr
+Q:为何不是4个Y共同一个U、一个V？
+not ok，图片下半部分是黑色的
+*/
+void yuv420_to_rgb24_1(unsigned char* yuv420, unsigned char* rgb, int width, int height)
+{
+    int y, cb, cr;
+    int r, g, b;
+    int i = 0;
+    unsigned char* p_y;
+    unsigned char* p_u;
+    unsigned char* p_v;
+    unsigned char* p_rgb;
+
+    p_y = yuv420;
+    p_u = p_y + width * height;
+    p_v = p_u + width * height / 4;
+    p_rgb = rgb;
+
+    for (i = 0; i < width * height / 4; i++)
+    {
+        y  = p_y[0];
+        cb = p_u[0];
+        cr = p_v[0];
+        yuv2rgb(y, cb, cr, &r, &g, &b);
+        //YCbCrConvertToRGB(y, cb, cr, &r, &g, &b);
+        // 此处可调整RGB排序，BMP图片排序为BGR
+        p_rgb[0] = r;
+        p_rgb[1] = g;
+        p_rgb[2] = b;
+
+        y  = p_y[1];
+        cb = p_u[0];
+        cr = p_v[0];
+        yuv2rgb(y, cb, cr, &r, &g, &b);
+        //YCbCrConvertToRGB(y, cb, cr, &r, &g, &b);
+        p_rgb[3] = r;
+        p_rgb[4] = g;
+        p_rgb[5] = b;
+
+        p_y += 2;
+        p_u += 1;
+        p_v += 1;
+        p_rgb += 6;
+    }
+}
+
+//enum {
+//YUV422,
+//YUV420,
+//};
+
+// OK
+// 转换的图片有一层“白纱”(与查表法对比)，应该是Y部分范围不正确导致。
+void yuv420_to_rgb24_2(unsigned char *yuv420, unsigned char *rgb24, int width, int height) 
+{
+    //  int begin = GetTickCount();
+    unsigned char* p_y;
+    unsigned char* p_u;
+    unsigned char* p_v;
+    int R,G,B,Y,U,V;
+    int x,y;
+    int nWidth = width>>1; //色度信号宽度
+
+    p_y = yuv420;
+    p_u = p_y + width * height;
+    p_v = p_u + width * height / 4;
+
+    for (y=0;y<height;y++)
+    {
+        for (x=0;x<width;x++)
+        {
+            Y = *(p_y + y*width + x);
+            U = *(p_u + ((y>>1)*nWidth) + (x>>1));
+            V = *(p_v + ((y>>1)*nWidth) + (x>>1));
+            /*
+            R = Y + 1.402*(V-128);
+            G = Y - 0.34414*(U-128) - 0.71414*(V-128);
+            B = Y + 1.772*(U-128);
+            */
+
+            yuv2rgb(Y, U, V, &R, &G, &B);
+            //YCbCrConvertToRGB(Y, U, V, &R, &G, &B);
+            //防止越界
+            if (R>255)R=255;
+            if (R<0)R=0;
+            if (G>255)G=255;
+            if (G<0)G=0;
+            if (B>255)B=255;
+            if (B<0)B=0;
+
+            // 图片倒立
+            //*(rgb24 + ((height-y-1)*width + x)*3) = R;  //B;
+            //*(rgb24 + ((height-y-1)*width + x)*3 + 1) = G;
+            //*(rgb24 + ((height-y-1)*width + x)*3 + 2) = B;  //R;
+            // 图像正常
+            *(rgb24 + (y*width + x)*3) = R; //B;
+            *(rgb24 + (y*width + x)*3 + 1) = G;
+            *(rgb24 + (y*width + x)*3 + 2) = B; //R;   
+        }
+    }
+}
+
+// not ok
+void yuv420_to_rgb24_3(unsigned char* yuv, unsigned char* rgb, int width, int height)
+{
+    int y, cb, cr;
+    int r, g, b;
+    int i = 0;
+    int j = 0;
+    unsigned char* p_y1;
+    unsigned char* p_y2;
+    unsigned char* p_u;
+    unsigned char* p_v;
+    unsigned char* p_rgb1;
+    unsigned char* p_rgb2;
+
+    p_u = yuv + width * height;
+    p_v = p_u + width * height / 4;
+
+    p_y1 = yuv;
+    p_y2 = yuv + width;
+    p_rgb1 = rgb;
+    p_rgb2 = rgb + 3 * width;
+
+    for (i = 0; i < height; i ++)
+    {
+        for (j = 0; j < width; j ++)
+        {
+            cb = *p_u++;
+            cr = *p_v++;
+
+            y  = *p_y1++;
+            yuv2rgb(y, cb, cr, &r, &g, &b);
+            *p_rgb1++ = r;
+            *p_rgb1++ = g;
+            *p_rgb1++ = b;
+        }
+    }
+#if 0
+    for (i = 0; i < height; i += 2)
+    {
+        for (j = 0; j < width; j += 2)
+        {
+            cb = *p_u++;
+            cr = *p_v++;
+
+            y  = *p_y1++;
+            yuv2rgb(y, cb, cr, &r, &g, &b);
+            *p_rgb1++ = r;
+            *p_rgb1++ = g;
+            *p_rgb1++ = b;
+
+            y  = *p_y2++;
+            yuv2rgb(y, cb, cr, &r, &g, &b);
+            *p_rgb2++ = r;
+            *p_rgb2++ = g;
+            *p_rgb2++ = b;
+
+            y  = *p_y1++;
+            yuv2rgb(y, cb, cr, &r, &g, &b);
+            *p_rgb1++ = r;
+            *p_rgb1++ = g;
+            *p_rgb1++ = b;
+
+            y  = *p_y2++;
+
+            yuv2rgb(y, cb, cr, &r, &g, &b);
+            *p_rgb2++ = r;
+            *p_rgb2++ = g;
+            *p_rgb2++ = b;
+
+            //p_y1 += 2;
+            //p_y2 += 2;
+
+            //p_rgb1 += 6;
+            //p_rgb2 += 6;
+        }
+
+        p_y1 += width;
+        p_y2 += width;
+        p_rgb1 += 3*width;
+        p_rgb2 += 3*width;
+    }
+#endif
+}
+
+void yuv_to_rgb24_1(unsigned char* yuv, unsigned char* rgb, int width, int height, YUV_TYPE type)
+{
+    int y, cb, cr;
+    int r, g, b;
+    int i = 0;
+    unsigned char* p_y;
+    unsigned char* p_u;
+    unsigned char* p_v;
+    unsigned char* p_rgb;
+    int chroma_v;       // 垂直亮度采样
+    int chroma_h;       // 水平亮度采样
+    int cbcr_width;     // 色度宽
+    int cbcr_height;    // 色度高
+    int cbcr_size;      // 色度大小
+
+    switch(type)
+    {
+    case YUV420P:
+        chroma_v = 2;
+        chroma_h = 2;
+        break;
+    case YUV422P:
+        chroma_v = 4;
+        chroma_h = 2;
+        break;
+    default:
+        chroma_v = chroma_h = 2;
+        break;
+    }
+    cbcr_width  = width * (chroma_h / 4.0);
+    cbcr_height = height * (chroma_v / 4.0);
+    cbcr_size   = cbcr_width * cbcr_height;
+
+    p_y = yuv;
+    p_u = p_y + width * height;
+    p_v = p_u + cbcr_size;
+    p_rgb = rgb;
+
+    for (i = 0; i < cbcr_size; i++)
+    {
+        y  = p_y[0];
+        cb = p_u[0];
+        cr = p_v[0];
+        yuv2rgb(y, cb, cr, &r, &g, &b);
+        p_rgb[0] = r;
+        p_rgb[1] = g;
+        p_rgb[2] = b;
+
+        y  = p_y[1];
+        cb = p_u[0];
+        cr = p_v[0];
+        yuv2rgb(y, cb, cr, &r, &g, &b);
+        p_rgb[3] = r;
+        p_rgb[4] = g;
+        p_rgb[5] = b;
+
+        p_y += 2;
+        p_u += 1;
+        p_v += 1;
+        p_rgb += 6;
     }
 }
