@@ -311,7 +311,7 @@ int main(int argc, char* argv[])
     //save_bmp420("yuvfile/suzie_qcif_yuv420p_00.yuv", "suzie_qcif_0.bmp", 176, 144);
 
 	// OK
-    //save_bmp422("yuvfile/tulips_yuv422_prog_planar_qcif.yuv", "tulips_yuv422_qcif_0.bmp", 176, 144);
+    save_bmp422("yuvfile/colorbar_cif_yuv422p.yuv", "colorbar_cif_yuv422p.bmp", 352, 288);
 
 	// OK
 	//save_bmp422sp("yuvfile/yuv422sp_3000x1024.yuv", "test.bmp", 3000, 1024);
@@ -319,7 +319,7 @@ int main(int argc, char* argv[])
 	// SPתP
     //ConvertImage("yuvfile/yuv422sp_3000x1024.yuv", "yuvfile/yuv422p.yuv", 3000, 1024);
     
-	save_bmp420("yuvfile/suzie_qcif_yuv420p_00.yuv", "suzie_qcif_1.bmp", 176, 144);
+	//save_bmp420("yuvfile/suzie_qcif_yuv420p_00.yuv", "suzie_qcif_1.bmp", 176, 144);
 
 
 	return 0;

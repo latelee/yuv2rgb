@@ -10,13 +10,20 @@
 #define WIDTH 720
 #define HEGHT 480
 
+// yuv422ÊÇw*h*2
+// yuv420ÊÇw*h*3/2
+#define FILE_SIZE (WIDTH*HEGHT*3/2)
+
 int main(void)
 {
     printf("test of writing yuv...\n");
-    unsigned char* buffer = (unsigned char*)malloc(WIDTH*HEGHT*sizeof(char)*3/2);
-    //fill_yuv_uyvy_1(WIDTH, HEGHT);
-    //fill_yuv_uyvy_2(WIDTH, HEGHT);
-    fill_yuv_yuv420_1(buffer, WIDTH, HEGHT);
-    write_file("yuv.yuv", (char*)buffer, WIDTH*HEGHT*3/2);
+    unsigned char* buffer = (unsigned char*)malloc(FILE_SIZE);
+    // ok
+    //fill_yuv_uyvy_2(buffer, WIDTH, HEGHT);
+    // ok
+    //fill_yuv_yuv422_2(buffer, WIDTH, HEGHT);
+    // _1 ok _2 not ok
+    fill_yuv_yuv420_2(buffer, WIDTH, HEGHT);
+    write_file("yuv.yuv", (char*)buffer, FILE_SIZE);
     return 0;
 }

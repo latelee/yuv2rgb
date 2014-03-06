@@ -163,7 +163,7 @@ void fill_yuv_yuv420_1(unsigned char* buffer, int width, int height)
         unsigned char u = (g_test_yuv[index] & 0x00ff00) >> 8;
         unsigned char v = (g_test_yuv[index] & 0x0000ff);
 
-        for (j=0; j<width*3/2; j+=4)
+        for (j=0; j<width; j+=4)
         {
             p_y[0] = y;
             p_y[1] = y;
@@ -181,6 +181,7 @@ void fill_yuv_yuv420_1(unsigned char* buffer, int width, int height)
 
 // yuv420
 // 竖条
+// 还有问题，继续找
 void fill_yuv_yuv420_2(unsigned char* buffer, int width, int height)
 {
     unsigned char *src = buffer;
@@ -196,6 +197,7 @@ void fill_yuv_yuv420_2(unsigned char* buffer, int width, int height)
     // 计出每种颜色有多少像素
     int slice = width / YUV_NUM;
 
+    printf("slice: %d\n", slice);
     for (i = 0; i < height; i++)
     {
         // 按竖条填充每一行的像素
@@ -205,7 +207,7 @@ void fill_yuv_yuv420_2(unsigned char* buffer, int width, int height)
             unsigned char y = (g_test_yuv[index] & 0xff0000 ) >> 16;
             unsigned char u = (g_test_yuv[index] & 0x00ff00) >> 8;
             unsigned char v = (g_test_yuv[index] & 0x0000ff);
-            for (k = 0; k < slice*2; k += 4)    // 一种颜色
+            for (k = 0; k < slice; k += 4)    // 一种颜色
             {
             p_y[0] = y;
             p_y[1] = y;
