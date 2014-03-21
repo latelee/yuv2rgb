@@ -2,7 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-// ITU-R BT.601给出的彩色信号的YCbCr值，8种颜色
+// ITU-R BT.601给出的彩色信号的YCbCr值，8种颜色(视频解密第3节，SDTV)
+// white yellow cyan green magenta red blue black
 unsigned int g_test_yuv[] ={
     0xb48080, 0xa22c8e, 0x839c2c, 0x70483a, 0x54b8c6,
     0x4164d4, 0x23d472, 0x108080};
