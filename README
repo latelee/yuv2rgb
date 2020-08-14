@@ -1,7 +1,10 @@
 yuv2rgb
 =======
 
-Convert yuv(yuv422p, yuv420p, yuv422sp, yuv420sp, etc) to rgb(save as bmp file), or vice versa.VS 2003 project. 
+Convert yuv(yuv422p, yuv420p, yuv422sp, yuv420sp, etc) to rgb(save as bmp file), or vice versa.VS 2015 project. 
+
+Windows: open yuvrgb.vcxproj file using vs 2015.  
+Linux: make ; ./a.out
 
 Late Lee
 

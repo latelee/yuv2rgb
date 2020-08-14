@@ -60,10 +60,16 @@ extern "C" {
 #ifdef WIN32
 #include <Windows.h>
 #else
-typedef unsigned char   BYTE;
-typedef unsigned short  WORD;
-typedef unsigned long   DWORD;
-typedef long            LONG;
+#include <stdint.h>
+//typedef unsigned char   BYTE;
+//typedef unsigned short  WORD;
+//typedef unsigned long   DWORD;
+//typedef long            LONG;
+
+typedef uint8_t   BYTE;
+typedef uint16_t  WORD;
+typedef uint32_t  DWORD;
+typedef uint32_t  LONG;
 
 #pragma pack(push)
 // 2字节对齐，共14
@@ -74,7 +80,7 @@ typedef struct tagBITMAPFILEHEADER {
     WORD    bfReserved1;
     WORD    bfReserved2;
     DWORD   bfOffBits;          // 实际位图数据偏移
-} BITMAPFILEHEADER; //__attribute__ ((packed));
+} BITMAPFILEHEADER;// __attribute__ ((packed));
 
 // 40
 typedef struct tagBITMAPINFOHEADER{
@@ -89,7 +95,7 @@ typedef struct tagBITMAPINFOHEADER{
     LONG       biYPelsPerMeter; // 垂直分辨率
     DWORD      biClrUsed;       // 位图实际使用的颜色表中的颜色数
     DWORD      biClrImportant;  // 位图显示过程中重要的颜色数
-} BITMAPINFOHEADER; //__attribute__ ((aligned(2)));
+} BITMAPINFOHEADER;// __attribute__ ((aligned(2)));
 
 typedef struct tagRGBQUAD {
     BYTE    rgbBlue;
@@ -101,7 +107,7 @@ typedef struct tagRGBQUAD {
 typedef struct tagBITMAPINFO{
     BITMAPINFOHEADER    bmiHeader;
     RGBQUAD             bmiColors[1];
-} BITMAPINFO;   // __attribute__ ((aligned(2)));
+} BITMAPINFO;//   __attribute__ ((aligned(2)));
 
 #pragma pack(pop)
 
