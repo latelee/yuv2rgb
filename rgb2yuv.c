@@ -17,7 +17,7 @@ static int RGB2YUV_YR[256], RGB2YUV_YG[256], RGB2YUV_YB[256];
 static int RGB2YUV_UR[256], RGB2YUV_UG[256], RGB2YUV_UBVR[256];
 static int                  RGB2YUV_VG[256], RGB2YUV_VB[256];
 
-void init_lookup_table()
+void init_lookup_table(void)
 {
     int i;
 
@@ -49,9 +49,7 @@ void init_lookup_table()
  *
  *
  ************************************************************************/
-int rgb24_to_yuv420 (int x_dim, int y_dim,
-             unsigned char *bmp,
-             unsigned char *yuv, int flip)
+int rgb24_to_yuv420 (int x_dim, int y_dim, unsigned char *bmp, unsigned char *yuv, int flip)
 {
     int i, j;
     unsigned char *r, *g, *b;
@@ -59,6 +57,8 @@ int rgb24_to_yuv420 (int x_dim, int y_dim,
     unsigned char *uu, *vv;
     unsigned char *pu1, *pu2,*pu3,*pu4;
     unsigned char *pv1, *pv2,*pv3,*pv4;
+
+	init_lookup_table();
 
     if(flip==0){
         r=bmp;
@@ -72,10 +72,13 @@ int rgb24_to_yuv420 (int x_dim, int y_dim,
     }
 
     y=yuv;
-    //uu=new unsigned char[x_dim*y_dim];
-    //vv=new unsigned char[x_dim*y_dim];
+#if defined(__SUPPORT_CPP__)
+    uu=new unsigned char[x_dim*y_dim];
+    vv=new unsigned char[x_dim*y_dim];
+#else
     uu = (unsigned char *)malloc(sizeof(char) * x_dim * y_dim);
     vv = (unsigned char *)malloc(sizeof(char) * x_dim * y_dim);
+#endif	/* __SUPPORT_CPP__ */
     u=uu;
     v=vv;
     for (i=0;i<y_dim;i++){
@@ -125,22 +128,30 @@ int rgb24_to_yuv420 (int x_dim, int y_dim,
         pv3+=x_dim;
         pv4+=x_dim;
     }
+#if defined(__SUPPORT_CPP__)
+    delete []uu;
+    delete []vv;
+#else
     free(uu);
     free(vv);
-    //delete []uu;
-    //delete []vv;
+#endif	/* __SUPPORT_CPP__ */
     return 0;
 }
+
 
 #define SCALEBITS            8
 #define ONE_HALF             (1 << (SCALEBITS - 1))
 #define FIX(x)               ((int) ((x) * (1L<<SCALEBITS) + 0.5))
 typedef unsigned char        uint8_t;
-void rgb24_to_yuv420p(uint8_t *lum, uint8_t *cb, uint8_t *cr, uint8_t *src, int width, int height)
+
+int rgb24_to_yuv420p(uint8_t *lum, uint8_t *cb, uint8_t *cr, uint8_t *src, int width, int height)
 {
     int wrap, wrap3, x, y;
     int r, g, b, r1, g1, b1;
     uint8_t *p;
+
+	init_lookup_table();
+
     wrap = width;
     wrap3 = width * 3;
     p = src;
@@ -191,4 +202,6 @@ void rgb24_to_yuv420p(uint8_t *lum, uint8_t *cb, uint8_t *cr, uint8_t *src, int 
         p += wrap3;
         lum += wrap;
     }
+
+	return 0;
 }

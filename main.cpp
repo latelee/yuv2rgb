@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <getopt.h>
+
 #include "yuv2rgb.h"
 #include "rgb2yuv.h"
 #include "bmp_utils.h"
@@ -12,7 +15,6 @@ int save_bmp422(const char* yuvfile, const char* bmpfile, int width, int height)
     int frameSize = 0; 
     int picSize = 0;
     int ret = 0;
-    int i = 0;
     unsigned char* framePtr = NULL;
     unsigned char* rgbPtr = NULL;
     long rgbSize = 0;
@@ -47,6 +49,10 @@ int save_bmp422(const char* yuvfile, const char* bmpfile, int width, int height)
     }
 
     ret = (int)fread(framePtr, 1, picSize, fp1);
+	if(ret <= 0) {
+		printf("[%s:%d] failed to read picture file(%s)\n", __FILE__, __LINE__, yuvfile);
+		return -1;
+	}
 
     //yuv422p_to_rgb24(framePtr, rgbPtr, width, height);
 	yuv_to_rgb24(YUV422P, framePtr, rgbPtr, width, height);
@@ -74,7 +80,6 @@ int save_bmp422sp(const char* yuvfile, const char* bmpfile, int width, int heigh
     int frameSize = 0; 
     int picSize = 0;
     int ret = 0;
-    int i = 0;
     unsigned char* framePtr = NULL;
     unsigned char* rgbPtr = NULL;
     long rgbSize = 0;
@@ -109,6 +114,10 @@ int save_bmp422sp(const char* yuvfile, const char* bmpfile, int width, int heigh
     }
 
     ret = (int)fread(framePtr, 1, picSize, fp1);
+	if(ret <= 0) {
+		printf("[%s:%d] failed to read picture file(%s)\n", __FILE__, __LINE__, yuvfile);
+		return -1;
+	}
 
     //yuv422sp_to_rgb24(framePtr, rgbPtr, width, height);
 	yuv_to_rgb24(YUV422SP, framePtr, rgbPtr, width, height);
@@ -170,6 +179,10 @@ int save_bmp420(const char* yuvfile, const char* bmpfile, int width, int height)
     }
 
     ret = (int)fread(framePtr, 1, picSize, fp1);
+	if(ret <= 0) {
+		printf("[%s:%d] failed to read picture file(%s)\n", __FILE__, __LINE__, yuvfile);
+		return -1;
+	}
 
     //yuv420p_to_rgb24(framePtr, rgbPtr, width, height);
 	//yuv_to_rgb24(YUV420P, framePtr, rgbPtr, width, height);
@@ -302,8 +315,50 @@ void ConvertImage(const char* src, const char* dst, int width, int height)
     fclose(fp2);
 }
 
+struct option longopts[] = {
+    { "path",           required_argument,  NULL,   'p' },
+    { "width",          required_argument,  NULL,   'w' },
+    { "height",         required_argument,  NULL,   'h' },
+    { "help",           no_argument,        NULL,   'H' },
+    { 0, 0, 0, 0 }
+};
+
 int main(int argc, char* argv[])
 {
+	int c = 0;
+	int width = 0;
+	int height = 0;
+	int g_model_type = 0;
+	char* picture_path = NULL;
+
+	while ((c = getopt_long(argc, argv, "p:w:h:m:H", longopts, NULL)) != -1) {
+		switch (c) {
+			case 'p':                                                                                                   
+				picture_path = optarg;
+				printf("[%s:%d] picture_path = %s\n", __FILE__, __LINE__, picture_path);
+				break;
+
+			case 'w':
+				width = atoi(optarg);
+				printf("[%s:%d] width = %d\n", __FILE__, __LINE__, width);
+				break;
+
+			case 'h':
+				height = atoi(optarg);
+				printf("[%s:%d] height = %d\n", __FILE__, __LINE__, height);
+				break;
+
+			case 'm':
+				g_model_type  = atoi(optarg);
+				printf("[%s:%d] g_model_type = %d\n", __FILE__, __LINE__, g_model_type);
+				break;
+
+			default:
+				printf("%s [-p picture path] [-w width] [-h height] [-m model type] [-H]\n", argv[0]);
+				exit(1);
+		}
+	}
+
     // ³éÈ¡ÎÄ¼þ
     //split_file("yuvfile/tempete_cif.yuv", "tempete_cif_yuv420p_00.yuv", 352, 288, 0);
 
@@ -311,7 +366,7 @@ int main(int argc, char* argv[])
     //save_bmp420("yuvfile/suzie_qcif_yuv420p_00.yuv", "suzie_qcif_0.bmp", 176, 144);
 
 	// OK
-    save_bmp422("yuvfile/colorbar_cif_yuv422p.yuv", "colorbar_cif_yuv422p.bmp", 352, 288);
+    //save_bmp422("yuvfile/colorbar_cif_yuv422p.yuv", "colorbar_cif_yuv422p.bmp", 352, 288);
 
 	// OK
 	//save_bmp422sp("yuvfile/yuv422sp_3000x1024.yuv", "test.bmp", 3000, 1024);
@@ -321,6 +376,9 @@ int main(int argc, char* argv[])
     
 	//save_bmp420("yuvfile/suzie_qcif_yuv420p_00.yuv", "suzie_qcif_1.bmp", 176, 144);
 
+	//rgb24_to_yuv420p(uint8_t *lum, uint8_t *cb, uint8_t *cr, uint8_t *src, int width, int height);
+
+	//int rgb24_to_yuv420 (int x_dim, int y_dim, unsigned char *bmp, unsigned char *yuv, int flip);
 
 	return 0;
 }
