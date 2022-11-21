@@ -49,7 +49,7 @@ void init_lookup_table(void)
  *
  *
  ************************************************************************/
-int rgb24_to_yuv420 (int x_dim, int y_dim, unsigned char *bmp, unsigned char *yuv, int flip)
+int rgb24_to_yuv420p_flip (int x_dim, int y_dim, unsigned char *bmp, unsigned char *yuv, int flip)
 {
     int i, j;
     unsigned char *r, *g, *b;
@@ -159,36 +159,36 @@ int rgb24_to_yuv420p(uint8_t *lum, uint8_t *cb, uint8_t *cr, uint8_t *src, int w
     {
         for (x = 0; x < width; x += 2)
         {
-            r = p[0];
+            r = p[2];
             g = p[1];
-            b = p[2];
+            b = p[0];
             r1 = r;
             g1 = g;
             b1 = b;
-            lum[0] = (FIX(0.29900) * r + FIX(0.58700) * g +FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
-            r = p[3];
+            lum[1] = (FIX(0.29900) * r + FIX(0.58700) * g +FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
+            r = p[5];
             g = p[4];
-            b = p[5];
+            b = p[3];
             r1 += r;
             g1 += g;
             b1 += b;
-            lum[1] = (FIX(0.29900) * r + FIX(0.58700) * g +FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
+            lum[0] = (FIX(0.29900) * r + FIX(0.58700) * g +FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
             p += wrap3;
             lum += wrap;
-            r = p[0];
+            r = p[2];
             g = p[1];
-            b = p[2];
-            r1 += r;
-            g1 += g;
-            b1 += b;
-            lum[0] = (FIX(0.29900) * r + FIX(0.58700) * g +FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
-            r = p[3];
-            g = p[4];
-            b = p[5];
+            b = p[0];
             r1 += r;
             g1 += g;
             b1 += b;
             lum[1] = (FIX(0.29900) * r + FIX(0.58700) * g +FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
+            r = p[5];
+            g = p[4];
+            b = p[3];
+            r1 += r;
+            g1 += g;
+            b1 += b;
+            lum[0] = (FIX(0.29900) * r + FIX(0.58700) * g +FIX(0.11400) * b + ONE_HALF) >> SCALEBITS;
 
             cb[0] = (((- FIX(0.16874) * r1 - FIX(0.33126) * g1 +
                 FIX(0.50000) * b1 + 4 * ONE_HALF - 1) >> (SCALEBITS + 2)) + 128);

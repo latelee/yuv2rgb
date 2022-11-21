@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+
 #include "yuv2rgb.h"
 #include "bmp_utils.h"
 
@@ -439,6 +441,51 @@ void yuv420sp_to_yuv420p(unsigned char* yuv420sp, unsigned char* yuv420p, int wi
     }
 }
 
+
+/**
+yyyy yyyy
+uu
+vv
+->
+yyyy yyyy
+uv    uv
+*/
+/* mode: 0 = uvuv, 1 = vuvu */
+void yuv420p_to_yuv420sp(unsigned char* yuv420sp, unsigned char* yuv420p, int width, int height, int mode)
+{
+    int i, j;
+    int y_size = width * height;
+
+    unsigned char* y = yuv420sp;
+    unsigned char* uv = yuv420sp + y_size;
+
+    unsigned char* y_tmp = yuv420p;
+    unsigned char* u_tmp = yuv420p + y_size;
+    unsigned char* v_tmp = yuv420p + y_size * 5 / 4;
+
+	if(mode < 0) {
+		mode = 0;
+	}
+	else if(mode > 1) {
+		mode = 1;
+	}
+    // y
+    memcpy(y, y_tmp, y_size);
+
+    // uu/vv => uv/uv
+    for (j = 0, i = 0; j < y_size/2; j+=2, i++)
+    {
+		if(mode == 0) {
+			uv[j] = u_tmp[i];
+			uv[j + 1] = v_tmp[i];
+		}
+		else {
+			uv[j] = v_tmp[i];
+			uv[j + 1] = u_tmp[i];
+		}
+    }
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////
@@ -736,7 +783,7 @@ void yuv420_to_rgb24_3(unsigned char* yuv, unsigned char* rgb, int width, int he
             *p_rgb1++ = b;
         }
     }
-#if 0
+#if 1
     for (i = 0; i < height; i += 2)
     {
         for (j = 0; j < width; j += 2)
