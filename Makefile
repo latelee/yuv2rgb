@@ -39,7 +39,8 @@ MAKE   = make
 
 # !!!===
 # target executable file or .a or .so
-target = a.out
+#target = a.out
+target = yuv2rgb
 
 # !!!===
 # compile flags

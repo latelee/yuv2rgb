@@ -398,7 +398,7 @@ int write_bmp_file(const char* bmp_file, unsigned char* rgb_buffer, int width, i
     }
 
     offset = sizeof(BITMAPINFOHEADER) + sizeof(BITMAPFILEHEADER);  //54字节
-    printf("bmp header size: %d = %d + %d\n", offset, sizeof(BITMAPINFOHEADER), sizeof(BITMAPFILEHEADER));
+    printf("bmp header size: %d = %ld + %ld\n", offset, sizeof(BITMAPINFOHEADER), sizeof(BITMAPFILEHEADER));
     // 4字节对齐 ((width * 24 + 31) / 32) * 4
     // 如已经对齐，则stride_byte与实际宽一致，如不对齐stride_byte会比宽大一些
     // stride_byte = ((width * 24 + 31) >> 5) << 2;
