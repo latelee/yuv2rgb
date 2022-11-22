@@ -316,7 +316,7 @@ void ConvertImage(const char* src, const char* dst, int width, int height)
     fclose(fp2);
 }
 
-void save_yuv420p(const char* src, const char* dst, int w, int h)
+void save_rbg24_to_yuv420(const char* src, const char* dst, int w, int h, int mode, int yuv_order)
 {
 	printf("[%s:%d] src = %s; dst = %s; w = %d; h = %d;\n", __FILE__, __LINE__, src, dst, w, h);
     FILE* fp1;
@@ -342,6 +342,7 @@ void save_yuv420p(const char* src, const char* dst, int w, int h)
     unsigned char* buffer1 = (unsigned char*)malloc(bmp_file_size);
     unsigned char* buffer2 = (unsigned char*)malloc(yuv_file_size);
     unsigned char* buffer3 = (unsigned char*)malloc(yuv_file_size);
+	unsigned char* last_buffer = NULL;
 
     if (NULL == buffer1 || NULL == buffer2 || NULL == buffer3)
     {
@@ -361,24 +362,30 @@ void save_yuv420p(const char* src, const char* dst, int w, int h)
         return;
     }
 
-#if 1
 	unsigned char* lum = buffer2;
 	unsigned char* cb = buffer2 + (w * h);
 	unsigned char* cr = buffer2 + (w * h * 5 / 4);
 	rgb24_to_yuv420p(lum, cb, cr, buffer1, w, h);
-#endif
 #if 0
 	rgb24_to_yuv420p_flip (w, h, buffer1, buffer2, 0);
 #endif
-	yuv420p_to_yuv420sp(buffer3, buffer2, w, h, 1);
+	switch(mode) {
+		case 1:
+			yuv420p_to_yuv420sp(buffer3, buffer2, w, h, yuv_order);
+			last_buffer = buffer3;
+			break;
+		default:
+			last_buffer = buffer2;
+			break;
+	}
     //yuv422sp_to_yuv422p(buffer1, buffer2, w, h);
     //yuv420sp_to_yuv420p(buffer1, buffer2, w, h);
 
-    ret = (int)fwrite(buffer3, 1, yuv_file_size, fp2);
-    if (ret != yuv_file_size)
-    {
-        printf("fwrite failed! real: %d ret: %d\n", yuv_file_size, ret);
-    }
+	ret = (int)fwrite(last_buffer, 1, yuv_file_size, fp2);
+	if (ret != yuv_file_size)
+	{
+		printf("fwrite failed! real: %d ret: %d\n", yuv_file_size, ret);
+	}
 
     fclose(fp1);
     fclose(fp2);
@@ -390,11 +397,84 @@ void save_yuv420p(const char* src, const char* dst, int w, int h)
 	buffer3 = NULL;
 }
 
+void save_yuv420_to_yuv420sp(const char* src, const char* dst, int w, int h)
+{
+	printf("[%s:%d] src = %s; dst = %s; w = %d; h = %d;\n", __FILE__, __LINE__, src, dst, w, h);
+    FILE* fp1;
+    FILE* fp2;
+
+    fp1 = fopen(src, "rb");
+    if (fp1 == NULL)
+    {
+        printf("open %s failed!\n", src);
+        return;
+    }
+    fp2 = fopen(dst, "wb");
+    if (fp2 == NULL)
+    {
+        printf("open %s failed!\n", dst);
+		fclose(fp1);
+        return;
+    }
+
+    int yuv420p_file_size = w * h * 3 / 2;
+    int yuv420sp_file_size = w * h * 3 / 2;
+
+    unsigned char* buffer1 = (unsigned char*)malloc(yuv420p_file_size);
+    unsigned char* buffer2 = (unsigned char*)malloc(yuv420sp_file_size);
+
+    if (NULL == buffer1 || NULL == buffer2)
+    {
+        printf("malloc failed!\n");
+		fclose(fp1);
+		fclose(fp2);
+        return;
+    }
+
+    int ret = 0;
+    ret = (int)fread(buffer1, 1, yuv420p_file_size, fp1);
+    if (ret != yuv420p_file_size)
+    {
+        printf("fread failed! real: %d ret: %d\n", yuv420p_file_size, ret);
+		fclose(fp1);
+		fclose(fp2);
+        return;
+    }
+
+#if 0
+	unsigned char* lum = buffer2;
+	unsigned char* cb = buffer2 + (w * h);
+	unsigned char* cr = buffer2 + (w * h * 5 / 4);
+	rgb24_to_yuv420p(lum, cb, cr, buffer1, w, h);
+#endif
+#if 0
+	rgb24_to_yuv420p_flip (w, h, buffer1, buffer2, 0);
+#endif
+	yuv420p_to_yuv420sp(buffer2, buffer1, w, h, 0);
+    //yuv422sp_to_yuv422p(buffer1, buffer2, w, h);
+    //yuv420sp_to_yuv420p(buffer1, buffer2, w, h);
+
+    ret = (int)fwrite(buffer2, 1, yuv420sp_file_size, fp2);
+    if (ret != yuv420sp_file_size)
+    {
+        printf("fwrite failed! real: %d ret: %d\n", yuv420sp_file_size, ret);
+    }
+
+    fclose(fp1);
+    fclose(fp2);
+	free(buffer1);
+	buffer1 = NULL;
+	free(buffer2);
+	buffer2 = NULL;
+}
+
 struct option longopts[] = {
-    { "path",           required_argument,  NULL,   'p' },
+    { "input",          required_argument,  NULL,   'i' },
     { "width",          required_argument,  NULL,   'w' },
     { "height",         required_argument,  NULL,   'h' },
 	{ "output",			required_argument,	NULL,	'o' },
+	{ "mode",			required_argument,	NULL,	'm' },
+	{ "yuv_order",		required_argument,	NULL,	'y' },
     { "help",           no_argument,        NULL,   'H' },
     { 0, 0, 0, 0 }
 };
@@ -404,14 +484,16 @@ int main(int argc, char* argv[])
 	int c = 0;
 	int width = 0;
 	int height = 0;
-	char* picture_path = NULL;
+	int mode = 0;
+	int yuv_order = 0;
+	char* input = NULL;
 	char* output_file = NULL;
 
-	while ((c = getopt_long(argc, argv, "p:w:h:o:H", longopts, NULL)) != -1) {
+	while ((c = getopt_long(argc, argv, "i:w:h:o:m:y:H", longopts, NULL)) != -1) {
 		switch (c) {
-			case 'p':                                                                                                   
-				picture_path = optarg;
-				printf("[%s:%d] picture_path = %s\n", __FILE__, __LINE__, picture_path);
+			case 'i':                                                                                                   
+				input = optarg;
+				printf("[%s:%d] input = %s\n", __FILE__, __LINE__, input);
 				break;
 
 			case 'w':
@@ -429,8 +511,18 @@ int main(int argc, char* argv[])
 				printf("[%s:%d] output_file = %s\n", __FILE__, __LINE__, output_file);
 				break;
 
+			case 'm':
+				mode = atoi(optarg);
+				printf("[%s:%d] mode = %d\n", __FILE__, __LINE__, mode);
+				break;
+
+			case 'y':
+				yuv_order = atoi(optarg);
+				printf("[%s:%d] flip_mode = %d\n", __FILE__, __LINE__, yuv_order);
+				break;
+
 			default:
-				printf("%s [-p picture path] [-w width] [-h height] [-m model type] [-H]\n", argv[0]);
+				printf("%s [-i input] [-w width] [-h height] [-m model type] [-y yuv order] [-H]\n", argv[0]);
 				exit(1);
 		}
 	}
@@ -440,20 +532,25 @@ int main(int argc, char* argv[])
 
     // OK
     //save_bmp420("yuvfile/suzie_qcif_yuv420p_00.yuv", "suzie_qcif_0.bmp", 176, 144);
+	//save_bmp420(input, output_file, width, height);
 
 	// OK
     //save_bmp422("yuvfile/colorbar_cif_yuv422p.yuv", "colorbar_cif_yuv422p.bmp", 352, 288);
+	//save_bmp422(input, output_file, width, height);
 
 	// OK
 	//save_bmp422sp("yuvfile/yuv422sp_3000x1024.yuv", "test.bmp", 3000, 1024);
+	//save_bmp422sp(input, output_file, width, height);
     
 	// SPתP
     //ConvertImage("yuvfile/yuv422sp_3000x1024.yuv", "yuvfile/yuv422p.yuv", 3000, 1024);
     
 	//save_bmp420("yuvfile/suzie_qcif_yuv420p_00.yuv", "suzie_qcif_1.bmp", 176, 144);
 
-	// rgb to yuv420p
-	save_yuv420p(picture_path, output_file, width, height);
+	// rgb to yuv420p (mode: 0 = yuv420p, 1 = yuv420sp)
+	save_rbg24_to_yuv420(input, output_file, width, height, mode, yuv_order);
 
+	// yuv420p to yuv420sp
+	//save_yuv420_to_yuv420sp(input, output_file, width, height);
 	return 0;
 }
